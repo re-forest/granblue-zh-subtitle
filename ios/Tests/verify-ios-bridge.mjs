@@ -67,9 +67,13 @@ function testBridgeScript() {
   }
 
   let mockDungeonComment = null;
+  let mockChoices = [];
 
   const sandbox = {
     location: { href: "https://game.granbluefantasy.jp/#quest/scene/1" },
+    getComputedStyle(el) {
+      return { visibility: el.visibility ?? "visible" };
+    },
     document: {
       readyState: "complete",
       body: {},
@@ -80,6 +84,9 @@ function testBridgeScript() {
         return null;
       },
       querySelectorAll(selector) {
+        if (selector.includes(".btn-select-balloon")) {
+          return mockChoices;
+        }
         if (selector === ".prt-scene-comment") {
           return mockBoxes.map(createBoxElement);
         }
@@ -172,6 +179,20 @@ function testBridgeScript() {
         { speaker: "", text: "奇妙な気配が漂っている……" },
         "應能正確擷取轉世地城事件對話"
       );
+
+      // 驗證劇情選項與地城選項擷取（應過濾 visibility !== visible 與折行壓縮）
+      mockChoices = [
+        { innerText: "先へ\n進む", visibility: "visible", getClientRects: () => [{ width: 120, height: 30 }] },
+        { innerText: "隱藏選項", visibility: "hidden", getClientRects: () => [{ width: 120, height: 30 }] },
+        { innerText: "引き返す", visibility: "visible", getClientRects: () => [{ width: 120, height: 30 }] }
+      ];
+      observerCallback();
+      assert.deepEqual(
+        { speaker: postedMessages.at(-1)?.speaker, text: postedMessages.at(-1)?.text },
+        { speaker: "", text: "1. 先へ 進む\n2. 引き返す" },
+        "應優先擷取可見選項並加上編號"
+      );
+      mockChoices = [];
       mockDungeonComment = null;
       resolve();
     }, 180);

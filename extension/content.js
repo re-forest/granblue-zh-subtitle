@@ -1,11 +1,28 @@
+const dungeonEventSelector = "#js-prt-dungeon-temporary-choices.active";
+
+function readChoices() {
+  const choices = document.querySelectorAll(
+    '.cnt-quest-scene .prt-sel-area .prt-sel-inner .btn-select-balloon, ' +
+    `${dungeonEventSelector} img[src*="/arcarum3/dungeon_choice/btn_choice.png"] + div`
+  );
+  const visibleChoices = Array.from(choices)
+    .filter(choice => choice.getClientRects().length && getComputedStyle(choice).visibility === "visible")
+    .map(choice => choice.innerText.trim().replace(/\s*\n\s*/g, " "))
+    .filter(Boolean);
+  return visibleChoices.map((text, index) => `${index + 1}. ${text}`).join("\n");
+}
+
 function readDungeonDialogue() {
   const message = document.querySelector(
-    '#js-prt-dungeon-temporary-choices.active img[src*="/arcarum3/dungeon_choice/base_comment.png"] + div'
+    `${dungeonEventSelector} img[src*="/arcarum3/dungeon_choice/base_comment.png"] + div`
   );
   return message?.getClientRects().length ? message.innerText.trim() : "";
 }
 
 function readDialogue() {
+  const choices = readChoices();
+  if (choices) return { speaker: "", text: choices };
+
   const dungeonText = readDungeonDialogue();
   if (dungeonText) return { speaker: "", text: dungeonText };
 

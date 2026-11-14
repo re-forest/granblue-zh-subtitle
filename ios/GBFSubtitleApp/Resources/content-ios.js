@@ -3,9 +3,30 @@
   if (window.__gbfSubtitleBridgeInstalled) return;
   window.__gbfSubtitleBridgeInstalled = true;
 
+  const dungeonEventSelector = "#js-prt-dungeon-temporary-choices.active";
+
+  function readChoices() {
+    const choices = document.querySelectorAll(
+      ".cnt-quest-scene .prt-sel-area .prt-sel-inner .btn-select-balloon, " +
+      `${dungeonEventSelector} img[src*="/arcarum3/dungeon_choice/btn_choice.png"] + div`
+    );
+    const visibleChoices = Array.from(choices)
+      .filter(choice => {
+        if (!choice || typeof choice.getClientRects !== "function" || !choice.getClientRects().length) {
+          return false;
+        }
+        return typeof getComputedStyle === "function"
+          ? getComputedStyle(choice).visibility === "visible"
+          : true;
+      })
+      .map(choice => (choice.innerText ?? choice.textContent ?? "").trim().replace(/\s*\n\s*/g, " "))
+      .filter(Boolean);
+    return visibleChoices.map((text, index) => `${index + 1}. ${text}`).join("\n");
+  }
+
   function readDungeonDialogue() {
     const message = document.querySelector(
-      '#js-prt-dungeon-temporary-choices.active img[src*="/arcarum3/dungeon_choice/base_comment.png"] + div'
+      `${dungeonEventSelector} img[src*="/arcarum3/dungeon_choice/base_comment.png"] + div`
     );
     if (!message || typeof message.getClientRects !== "function" || !message.getClientRects().length) {
       return "";
@@ -14,6 +35,11 @@
   }
 
   function readDialogue() {
+    const choices = readChoices();
+    if (choices) {
+      return { speaker: "", text: choices };
+    }
+
     const dungeonText = readDungeonDialogue();
     if (dungeonText) {
       return { speaker: "", text: dungeonText };
