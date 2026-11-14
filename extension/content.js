@@ -1,4 +1,14 @@
+function readDungeonDialogue() {
+  const message = document.querySelector(
+    '#js-prt-dungeon-temporary-choices.active img[src*="/arcarum3/dungeon_choice/base_comment.png"] + div'
+  );
+  return message?.getClientRects().length ? message.innerText.trim() : "";
+}
+
 function readDialogue() {
+  const dungeonText = readDungeonDialogue();
+  if (dungeonText) return { speaker: "", text: dungeonText };
+
   const boxes = document.querySelectorAll(".prt-scene-comment");
   for (let i = boxes.length - 1; i >= 0; i--) {
     const box = boxes[i];

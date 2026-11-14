@@ -66,11 +66,19 @@ function testBridgeScript() {
     }
   }
 
+  let mockDungeonComment = null;
+
   const sandbox = {
     location: { href: "https://game.granbluefantasy.jp/#quest/scene/1" },
     document: {
       readyState: "complete",
       body: {},
+      querySelector(selector) {
+        if (selector.includes("#js-prt-dungeon-temporary-choices.active")) {
+          return mockDungeonComment;
+        }
+        return null;
+      },
       querySelectorAll(selector) {
         if (selector === ".prt-scene-comment") {
           return mockBoxes.map(createBoxElement);
@@ -152,6 +160,19 @@ function testBridgeScript() {
       assert.equal(observerDisconnected, true, "stopWatching 必須中斷 MutationObserver");
       sandbox.window.__gbfSubtitleBridge.forceCheck();
       assert.equal(observerDisconnected, false, "forceCheck 應重新啟動觀察並重送目前台詞");
+
+      // 驗證轉世地城事件對話 (#js-prt-dungeon-temporary-choices.active) 優先擷取
+      mockDungeonComment = {
+        innerText: "奇妙な気配が漂っている……",
+        getClientRects: () => [{ width: 200, height: 24 }]
+      };
+      observerCallback();
+      assert.deepEqual(
+        { speaker: postedMessages.at(-1)?.speaker, text: postedMessages.at(-1)?.text },
+        { speaker: "", text: "奇妙な気配が漂っている……" },
+        "應能正確擷取轉世地城事件對話"
+      );
+      mockDungeonComment = null;
       resolve();
     }, 180);
   });
