@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>碧藍幻想繁中字幕</title>
+<style>
+  :root {
+    --abyss: #071519;
+    --slate: #0e262c;
+    --brass: #d4b475;
+    --brass-line: rgba(212, 180, 117, 0.34);
+    --crystal: #6ee7d8;
+    --ivory: #f7f4eb;
+    --muted: #98b4b7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    position: relative;
+    width: 288px;
+    margin: 0;
+    padding: 16px;
+    color-scheme: dark;
+    accent-color: var(--crystal);
+    background:
+      radial-gradient(circle at 92% 4%, rgba(110, 231, 216, 0.14), transparent 52%),
+      radial-gradient(circle at 8% 96%, rgba(212, 180, 117, 0.08), transparent 48%),
+      var(--abyss);
+    color: var(--ivory);
+    font: 13.5px/1.55 "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  }
+  .frame {
+    position: relative;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--brass-line);
+    background: linear-gradient(160deg, rgba(16, 42, 48, 0.92), rgba(7, 21, 25, 0.98));
+    box-shadow: inset 0 1px 0 rgba(247, 244, 235, 0.08);
+  }
+  .corner {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background: var(--brass);
+    box-shadow: 0 0 0 1px var(--abyss);
+  }
+  .c-tl { top: -3px; left: -3px; }
+  .c-tr { top: -3px; right: -3px; }
+  .c-bl { bottom: -3px; left: -3px; }
+  .c-br { bottom: -3px; right: -3px; }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--brass-line);
+  }
+  h1 {
+    margin: 0;
+    font-family: "Noto Serif TC", "PMingLiU", "Microsoft JhengHei", serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #f6ebd1;
+  }
+  .backend-pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(110, 231, 216, 0.3);
+    background: rgba(110, 231, 216, 0.09);
+    color: var(--crystal);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+  .backend-pill[data-backend="cpu"] {
+    border-color: rgba(212, 180, 117, 0.45);
+    background: rgba(212, 180, 117, 0.12);
+    color: #f3d99d;
+  }
+  .backend-pill[data-backend="server"] {
+    border-color: rgba(110, 231, 216, 0.48);
+    background: rgba(23, 102, 90, 0.45);
+    color: var(--ivory);
+  }
+
+  .switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    cursor: pointer;
+    color: var(--ivory);
+  }
+  .switch input {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    margin: 0;
+    border-radius: 20px;
+    border: 1px solid rgba(212, 180, 117, 0.36);
+    background: rgba(6, 17, 20, 0.85);
+    cursor: inherit;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+  .switch input::before {
+    content: "";
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 3px;
+    border-radius: 50%;
+    background: #c7d5d6;
+    transition: transform 140ms ease, background-color 140ms ease;
+  }
+  .switch input:checked {
+    background: #17665a;
+    border-color: var(--crystal);
+  }
+  .switch input:checked::before {
+    transform: translateX(20px);
+    background: var(--ivory);
+  }
+  .switch input:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; }
+  .switch input:disabled { opacity: 0.5; cursor: wait; }
+
+  .divider {
+    height: 1px;
+    margin: 8px 0;
+    background: linear-gradient(90deg, transparent, var(--brass-line), transparent);
+  }
+
+  .slider-row { display: grid; gap: 4px; padding: 3px 0; }
+  .slider-head { display: flex; justify-content: space-between; align-items: center; }
+  .slider-value { font-variant-numeric: tabular-nums; color: var(--brass); font-size: 12.5px; }
+  input[type="range"] { width: 100%; margin: 2px 0; cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; border-radius: 4px; }
+  @supports not (accent-color: #6ee7d8) {
+    input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; height: 18px; }
+    input[type="range"]::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: rgba(212, 180, 117, 0.25); }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -4.5px; border-radius: 50%; background: var(--crystal); }
+  }
+
+  .mode-group { display: grid; gap: 6px; padding: 2px 0 4px; }
+  .mode-label { font-size: 12.5px; color: var(--muted); }
+  .segmented {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid var(--brass-line);
+    background: rgba(5, 14, 17, 0.85);
+  }
+  .segmented button {
+    border: 0;
+    border-radius: 6px;
+    padding: 5px 4px;
+    background: transparent;
+    color: var(--muted);
+    font: 12px/1.3 inherit;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+  .segmented button[aria-checked="true"] {
+    background: rgba(23, 102, 90, 0.85);
+    color: var(--ivory);
+    box-shadow: inset 0 0 0 1px rgba(110, 231, 216, 0.35);
+  }
+  .segmented button:focus-visible { outline: 2px solid var(--crystal); outline-offset: 1px; }
+
+  .server-panel {
+    display: grid;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(212, 180, 117, 0.24);
+    background: rgba(5, 14, 17, 0.7);
+  }
+  .server-panel[hidden] { display: none; }
+  .field { display: grid; gap: 2px; }
+  .field[hidden] { display: none; }
+  .field label { font-size: 11px; color: var(--muted); }
+  .field input,
+  .field select {
+    width: 100%;
+    padding: 5px 7px;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 180, 117, 0.3);
+    background: rgba(7, 21, 25, 0.95);
+    color: var(--ivory);
+    font: 12px/1.35 inherit;
+  }
+  .field input::placeholder { color: rgba(152, 180, 183, 0.5); }
+  .field input:focus-visible,
+  .field select:focus-visible { outline: 2px solid var(--crystal); outline-offset: 1px; }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .check-row[hidden] { display: none; }
+  .check-row input { margin: 0; accent-color: var(--crystal); }
+  .server-actions { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .test-btn {
+    flex-shrink: 0;
+    padding: 4px 9px;
+    border: 1px solid var(--brass-line);
+    border-radius: 6px;
+    background: rgba(23, 102, 90, 0.45);
+    color: var(--ivory);
+    font: 11.5px/1.3 inherit;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+  .test-btn:hover:not(:disabled) { border-color: var(--brass); background: rgba(23, 102, 90, 0.72); }
+  .test-btn:disabled { opacity: 0.5; cursor: wait; }
+  .test-btn:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; }
+  .server-test-msg { font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .server-test-msg[data-tone="ok"] { color: var(--crystal); }
+  .server-test-msg[data-tone="error"] { color: #fecaca; }
+
+  .status-box {
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(110, 231, 216, 0.16);
+    background: rgba(6, 17, 20, 0.72);
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .status-box[data-tone="warn"] {
+    border-color: rgba(245, 158, 11, 0.48);
+    background: rgba(120, 53, 15, 0.25);
+    color: #fde68a;
+  }
+  .status-box[data-tone="error"] {
+    border-color: rgba(248, 113, 113, 0.45);
+    background: rgba(127, 29, 29, 0.26);
+    color: #fecaca;
+  }
+
+  .retry-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--brass-line);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #1a5c52, #12433c);
+    color: var(--ivory);
+    font: inherit;
+    cursor: pointer;
+  }
+  .retry-btn:disabled { opacity: 0.55; cursor: default; }
+  .export-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--brass-line);
+    border-radius: 8px;
+    background: transparent;
+    color: #e5d2a7;
+    font: 12.5px/1.4 inherit;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .export-btn:hover:not(:disabled) {
+    border-color: var(--brass);
+    background: rgba(212, 180, 117, 0.12);
+    color: var(--ivory);
+  }
+  .retry-btn:focus-visible,
+  .export-btn:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; }
+  .export-btn:disabled { opacity: 0.42; cursor: default; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .switch input,
+    .switch input::before,
+    .segmented button,
+    .test-btn,
+    .export-btn { transition: none; }
+  }
+</style>
+<script type="module" src="popup.js"></script>
+</head>
+<body>
+  <div class="frame">
+    <span class="corner c-tl" aria-hidden="true"></span>
+    <span class="corner c-tr" aria-hidden="true"></span>
+    <span class="corner c-bl" aria-hidden="true"></span>
+    <span class="corner c-br" aria-hidden="true"></span>
+
+    <div class="head">
+      <h1>碧藍幻想 繁中字幕</h1>
+      <span id="backend-pill" class="backend-pill" hidden></span>
+    </div>
+
+    <label class="switch">懸浮字幕 <input id="toggle" type="checkbox" role="switch" disabled></label>
+    <label class="switch">側邊欄字幕 <input id="toggle-sidepanel" type="checkbox" role="switch" disabled></label>
+
+    <div class="divider"></div>
+
+    <div class="slider-row">
+      <label class="slider-head" for="font-scale">
+        <span>字體大小</span>
+        <span id="font-scale-value" class="slider-value">100%</span>
+      </label>
+      <input id="font-scale" type="range" min="70" max="140" step="5" value="100">
+    </div>
+    <label class="switch">字級自適應 <input id="auto-fit" type="checkbox" role="switch" checked></label>
+    <label class="switch">劇情語境連貫 <input id="context-enabled" type="checkbox" role="switch" checked></label>
+
+    <div class="divider"></div>
+
+    <div class="mode-group">
+      <span class="mode-label" id="mode-label">推論引擎模式</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
+        <button type="button" role="radio" data-mode="auto" aria-checked="true">自動</button>
+        <button type="button" role="radio" data-mode="gpu" aria-checked="false">GPU</button>
+        <button type="button" role="radio" data-mode="cpu" aria-checked="false">CPU</button>
+        <button type="button" role="radio" data-mode="server" aria-checked="false">API</button>
+      </div>
+      <div id="server-config" class="server-panel" hidden>
+        <div class="field">
+          <label for="server-preset">伺服器類型</label>
+          <select id="server-preset">
+            <option value="ollama">Ollama（本機 AI）</option>
+            <option value="lmstudio">LM Studio（本機 AI）</option>
+            <option value="custom">OpenAI 相容／雲端 API</option>
+            <option value="llama-plamo">進階：llama.cpp（PLaMo 專用）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="server-endpoint">伺服器位址</label>
+          <input id="server-endpoint" type="url" placeholder="http://127.0.0.1:8080">
+        </div>
+        <div id="field-model" class="field" hidden>
+          <label id="server-model-label" for="server-model">模型名稱</label>
+          <input id="server-model" type="text" placeholder="例如 qwen2.5:7b">
+        </div>
+        <div id="field-key" class="field" hidden>
+          <label for="server-key">API Key（選填）</label>
+          <input id="server-key" type="password" autocomplete="off" placeholder="需要驗證時填寫">
+        </div>
+        <label id="field-plamo" class="check-row" hidden>
+          <input id="server-use-plamo" type="checkbox">
+          <span>目標為 PLaMo 翻譯專用模型</span>
+        </label>
+        <div class="server-actions">
+          <button id="test-server" class="test-btn" type="button">測試連線</button>
+          <span id="server-test-result" class="server-test-msg"></span>
+        </div>
+      </div>
+    </div>
+
+    <p id="status" class="status-box" role="status" data-tone="info">正在確認遊戲分頁…</p>
+    <button id="export-history" class="export-btn" type="button" title="本機暫存最多 500 筆（關閉瀏覽器後清空，超出將覆蓋最舊紀錄）" disabled>匯出翻譯紀錄 (0 / 500)</button>
+    <button id="retry" class="retry-btn" hidden>重試載入模型</button>
+  </div>
+</body>
+</html>

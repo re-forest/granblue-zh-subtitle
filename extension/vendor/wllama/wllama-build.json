@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "wllama": {
+    "repository": "https://github.com/ngxson/wllama.git",
+    "commit": "d275dac17bc7f190161deb24fd834ce03342e2bc"
+  },
+  "llamaCpp": {
+    "commit": "5aeac37a35b44fde4bdffaec9159f2fcb253b622"
+  },
+  "emscripten": {
+    "image": "emscripten/emsdk:4.0.20",
+    "tag": "4.0.20"
+  },
+  "dawn": {
+    "tag": "v20260317.182325"
+  },
+  "toolchain": {
+    "node": "v24.22.2",
+    "tsup": "8.4.0",
+    "packageLockSha256": "1cd515163a5a3e4097ef9848fea12720570ef71967bc4c2e45dba1b4ec6534ef"
+  },
+  "features": [
+    "webgpu",
+    "jspi",
+    "memory64",
+    "compat"
+  ],
+  "compat": true,
+  "patches": [
+    {
+      "file": "0001-static-worker-script.patch",
+      "sha256": "6f2c3ba185a1cefc0473699bf19a618542f95a514d4838d66bb91cb7527769d4"
+    },
+    {
+      "file": "0002-packaged-asset-paths.patch",
+      "sha256": "40f655f321f83a37dd22505c11a1454c0aedc78e2af4e36d97533e2c0ff6edd4"
+    },
+    {
+      "file": "0003-wasm-simd-cpu-kernels.patch",
+      "sha256": "2282e0c7609c6083622c2c75eca79ea900151e323b23b94c50fa2a9ac90de4ac"
+    },
+    {
+      "file": "0004-webgpu-reuse-bind-groups.patch",
+      "sha256": "6a444cf27f17da394a55e93c88d875243d673890e3b463486d561b84ff463468"
+    },
+    {
+      "file": "0005-disable-prompt-cache.patch",
+      "sha256": "6bfef7feafe65498f11d51268eb5b11c147adc7b989fc0afa1a33cb056d1b4d1"
+    },
+    {
+      "file": "0006-retry-dawn-download.patch",
+      "sha256": "b57213c62ddf0890e3bc32f1a99f68720fdc0961b4436a39ee27f8cf7d48980e"
+    },
+    {
+      "file": "0007-webgpu-adapter-device-retry.patch",
+      "sha256": "8049de214d30ea37cd9a6572677e7aed6ef1abc2100b9ceef8a925a52cc2d565"
+    },
+    {
+      "file": "0008-webgpu-debug-profile.patch",
+      "sha256": "e5251b3945620cba727152eb1fb2b881134a5ff674943e3447a825f6ed1a0f2e"
+    }
+  ],
+  "files": {
+    "wllama.js": {
+      "bytes": 230712,
+      "sha256": "17bd600d6d5f886b0351a0863a6a70bbf211534ee7ac745739626e45da3ec4b5",
+      "minimumBytes": 50000
+    },
+    "wllama.wasm": {
+      "bytes": 9244012,
+      "sha256": "538c170a4f701d5a977660ad648e5c52d9e5c0c454fa49391e343066fd88724c",
+      "minimumBytes": 4194304
+    },
+    "wllama-worker.js": {
+      "bytes": 18914,
+      "sha256": "222dd0b036202a926e751d8b0b1893fc3a0b3a46aa063f2a8e7a7b76318550d9",
+      "minimumBytes": 10000
+    },
+    "wllama-module.js": {
+      "bytes": 140855,
+      "sha256": "7cae4817299005b828cad523e6a08d814e4bbde5100e0f1780bcde7fe17e153e",
+      "minimumBytes": 50000
+    },
+    "wllama-pthread.js": {
+      "bytes": 140816,
+      "sha256": "af3ead969737fb1587fdc7efe0e51dbc9a7ba91dc8fd93a904b7e84fec402ce1",
+      "minimumBytes": 50000
+    },
+    "wllama-compat.wasm": {
+      "bytes": 16843921,
+      "sha256": "025a38642d05b26a3465838acc038c0f0da679876ab187c86bdd66214c36be61",
+      "minimumBytes": 4194304
+    },
+    "wllama-compat-module.js": {
+      "bytes": 174123,
+      "sha256": "7de0938db27837eebfe497ddb09449cb5efecff2759a6deeaa541f78a0d9da54",
+      "minimumBytes": 50000
+    },
+    "wllama-compat-pthread.js": {
+      "bytes": 174084,
+      "sha256": "afa72526b773b588900840e62016a8c8051584b266bf0bf49d7ed5946c1a1cfc",
+      "minimumBytes": 50000
+    }
+  }
+}

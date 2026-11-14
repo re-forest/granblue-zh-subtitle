@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>碧藍幻想繁中字幕（側邊欄）</title>
+<style>
+  :root {
+    --font-scale: 1;
+    --abyss: #071519;
+    --brass: #d4b475;
+    --brass-line: rgba(212, 180, 117, 0.36);
+    --crystal: #6ee7d8;
+    --ivory: #f7f4eb;
+    --text-dim: rgba(247, 244, 235, 0.72);
+    --muted: #93b0b3;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 14px;
+    gap: 14px;
+    color-scheme: dark;
+    background:
+      radial-gradient(circle at 86% 4%, rgba(110, 231, 216, 0.14), transparent 48%),
+      radial-gradient(circle at 10% 36%, rgba(212, 180, 117, 0.08), transparent 45%),
+      var(--abyss);
+    color: var(--ivory);
+    font: 14px/1.6 "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  }
+
+  /* 上方固定當前台詞區域 */
+  .hero-stage {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 172px;
+    padding: 16px 18px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--brass-line);
+    background: linear-gradient(155deg, rgba(16, 44, 50, 0.96), rgba(7, 21, 25, 0.98));
+    box-shadow:
+      0 14px 34px rgba(0, 0, 0, 0.48),
+      inset 0 1px 0 rgba(247, 244, 235, 0.12);
+  }
+  .hero-stage::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 180, 117, 0.14);
+    pointer-events: none;
+  }
+  .corner {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background: var(--brass);
+    opacity: 0.72;
+    pointer-events: none;
+  }
+  .c-tl { top: 9px; left: 9px; }
+  .c-tr { top: 9px; right: 9px; }
+  .c-bl { bottom: 9px; left: 9px; }
+  .c-br { bottom: 9px; right: 9px; }
+
+  .shimmer {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2.5px;
+    background: linear-gradient(90deg, transparent, var(--brass), var(--crystal), transparent);
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  .hero-stage[data-busy="true"] .shimmer {
+    opacity: 1;
+    animation: slide 1.3s ease-in-out infinite;
+  }
+  @keyframes slide {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
+  .stage-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .speaker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(212, 180, 117, 0.52);
+    background: rgba(14, 38, 44, 0.9);
+    color: #f7efd8;
+    font-weight: 600;
+    font-size: calc(14px * (0.7 + 0.3 * var(--font-scale)));
+  }
+  .speaker::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+    background: var(--crystal);
+  }
+  .stage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .stage-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--crystal);
+  }
+  .hero-stage[data-busy="true"] .stage-badge::before { background: var(--brass); }
+  .hero-stage[data-backend="cpu"] .stage-badge::before { background: #f59e0b; }
+
+  .stage-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .caption {
+    margin: 0;
+    font-weight: 600;
+    font-size: calc(22px * var(--font-scale));
+    line-height: 1.5;
+    color: var(--ivory);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  }
+  .hero-stage[data-error="true"] .caption { color: #fca5a5; }
+  .caption.entering {
+    animation: fadeUp 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes fadeUp {
+    from { opacity: 0.35; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .original {
+    margin: 12px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(212, 180, 117, 0.16);
+    font-size: calc(12.5px * (0.75 + 0.25 * var(--font-scale)));
+    line-height: 1.45;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+  .original[hidden] { display: none; }
+
+  .degraded-banner {
+    flex-shrink: 0;
+    margin: -4px 0 0;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    background: rgba(120, 53, 15, 0.25);
+    color: #fde68a;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .degraded-banner[hidden] { display: none; }
+
+  /* 中段分隔與控制列 */
+  .section-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px 6px;
+    border-bottom: 1px solid rgba(212, 180, 117, 0.2);
+    font-family: "Noto Serif TC", "PMingLiU", "Microsoft JhengHei", serif;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: #e5d2a7;
+  }
+  .section-actions { display: flex; align-items: center; gap: 6px; }
+  button {
+    border: 1px solid var(--brass-line);
+    border-radius: 6px;
+    padding: 3px 9px;
+    background: transparent;
+    color: var(--muted);
+    font: 12px/1.4 "Microsoft JhengHei", system-ui, sans-serif;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  button:hover:not(:disabled) { color: var(--ivory); border-color: var(--brass); background: rgba(212, 180, 117, 0.12); }
+  button:disabled { opacity: 0.42; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; }
+
+  /* 下方劇情回顧列表 */
+  .history {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 180, 117, 0.35) transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+  }
+  .history-empty {
+    margin: 12px 0 0;
+    font-size: 12.5px;
+    color: rgba(147, 176, 179, 0.55);
+    text-align: center;
+  }
+  .log-item {
+    padding: 4px 4px 10px 12px;
+    border-left: 2px solid rgba(212, 180, 117, 0.28);
+    border-bottom: 1px solid rgba(212, 180, 117, 0.08);
+    opacity: 0.72;
+    transition: opacity 120ms ease, border-left-color 120ms ease;
+  }
+  .log-item:hover {
+    opacity: 1;
+    border-left-color: var(--brass);
+  }
+  .log-speaker {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brass);
+    margin-bottom: 2px;
+  }
+  .log-zh { margin: 0; font-size: 13.5px; line-height: 1.48; color: var(--text-dim); }
+  .log-ja { margin: 3px 0 0; font-size: 11.5px; line-height: 1.4; color: var(--muted); opacity: 0.8; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-stage[data-busy="true"] .shimmer,
+    .caption.entering { animation: none; }
+    button,
+    .log-item { transition: none; }
+  }
+</style>
+<script type="module" src="sidepanel.js"></script>
+</head>
+<body>
+  <section id="card" class="hero-stage" data-busy="false" data-error="false">
+    <span class="corner c-tl" aria-hidden="true"></span>
+    <span class="corner c-tr" aria-hidden="true"></span>
+    <span class="corner c-bl" aria-hidden="true"></span>
+    <span class="corner c-br" aria-hidden="true"></span>
+    <div class="shimmer" aria-hidden="true"></div>
+    <div class="stage-top">
+      <div id="speaker" class="speaker" hidden></div>
+      <span id="stage-badge" class="stage-badge">即時字幕</span>
+    </div>
+    <div class="stage-body">
+      <p id="caption" class="caption">等待劇情台詞…</p>
+      <p id="original" class="original" hidden></p>
+    </div>
+  </section>
+
+  <p id="degraded-banner" class="degraded-banner" hidden></p>
+
+  <div class="section-bar">
+    <span id="history-label" title="畫面顯示近期 25 筆，暫存可匯出上限 500 筆（超過將覆蓋最舊紀錄）">劇情回顧 (0 / 500)</span>
+    <div class="section-actions">
+      <button id="export" type="button" title="下載目前暫存的翻譯紀錄（上限 500 筆）" disabled>匯出紀錄</button>
+      <button id="clear" type="button">清除紀錄</button>
+    </div>
+  </div>
+  <div id="history" class="history" aria-live="off">
+    <p id="history-empty" class="history-empty">翻頁後的上一句會收錄於此（畫面顯示近期 25 筆，可匯出上限 500 筆）</p>
+  </div>
+</body>
+</html>
