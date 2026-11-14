@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>碧藍幻想繁中字幕｜iOS 與 iPadOS 系統架構（iPhone 15 Pro Max 基準）</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f6f2;
+      --ink: #172620;
+      --muted: #495952;
+      --line: #cbd4cd;
+      --green: #166049;
+      --blue: #28578a;
+      --gold: #9a7429;
+      --abyss: #071519;
+      --brass: #d4b475;
+      --crystal: #6ee7d8;
+      --ivory: #f7f4eb;
+      font: 16px/1.65 Inter, "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); }
+    main { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 40px; }
+    header { border-top: 5px solid var(--green); padding: 22px 0 26px; }
+    .label { margin: 0; font-size: .78rem; font-weight: 750; letter-spacing: .12em; color: var(--green); }
+    h1 { margin: .18em 0; font-size: clamp(1.9rem, 4.6vw, 3.1rem); line-height: 1.15; }
+    h2 { margin: 0 0 .5rem; font-size: 1.35rem; }
+    h3 { margin: 0 0 .35rem; font-size: 1.1rem; }
+    p { margin: .45rem 0 0; }
+    .muted { color: var(--muted); }
+    .callout {
+      margin: 0 0 20px;
+      padding: 16px 22px;
+      border-left: 4px solid var(--green);
+      background: #eaf2ed;
+      border-radius: 0 10px 10px 0;
+    }
+    .diagram {
+      margin: 0 0 22px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+    }
+    .diagram figcaption { margin-bottom: 14px; }
+    .diagram figcaption p { font-size: .95rem; color: var(--muted); margin-top: .2rem; }
+    code { font: .88em/1.5 "IBM Plex Mono", Consolas, monospace; overflow-wrap: anywhere; }
+
+    /* 互動模擬預覽 */
+    .sim-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sim-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--green);
+      border-radius: 8px;
+      background: #eff8f3;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      min-block-size: 40px;
+      transition: background-color 120ms ease, color 120ms ease;
+    }
+    .sim-btn:hover { background: #dceee4; }
+    .sim-btn[aria-pressed="true"] {
+      background: var(--green);
+      color: #fff;
+    }
+    .sim-btn:focus-visible,
+    .table-wrapper:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+    .sim-phone {
+      max-width: 640px;
+      margin: 0 auto;
+      border: 2px solid var(--brass);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--abyss);
+      color: var(--ivory);
+      box-shadow: 0 10px 28px rgba(7, 21, 25, .28);
+    }
+    .sim-game {
+      padding: 16px 20px;
+      background: linear-gradient(180deg, #16333a, #0e2429);
+      border-bottom: 1px solid rgba(212, 180, 117, .38);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: .92rem;
+    }
+    .sim-pill {
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(110, 231, 216, .4);
+      background: rgba(110, 231, 216, .12);
+      color: var(--crystal);
+      font-size: .8rem;
+      white-space: nowrap;
+    }
+    .sim-deck {
+      padding: 18px 22px 20px;
+      min-height: 150px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+    }
+    .sim-speaker {
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--crystal);
+    }
+    .sim-zh {
+      margin: 0;
+      font-size: clamp(1.16rem, 2.5vw, 1.42rem);
+      font-weight: 600;
+      line-height: 1.5;
+      min-height: 1.5em;
+    }
+    .sim-ja {
+      margin: 4px 0 0;
+      padding-top: 8px;
+      border-top: 1px solid rgba(212, 180, 117, .2);
+      font-size: .88rem;
+      color: #98b4b7;
+    }
+    .sim-metrics {
+      margin-top: 12px;
+      text-align: center;
+      font-size: .9rem;
+      color: var(--muted);
+      min-height: 1.5em;
+    }
+
+    /* 關鍵指標 */
+    .evidence {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin: 22px 0;
+      padding: 18px 0;
+      border-block: 1px solid var(--line);
+    }
+    .number {
+      display: block;
+      font-size: 1.45rem;
+      font-weight: 750;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+      color: var(--green);
+    }
+
+    /* 響應式規格表（遵循 modern-web-guidance responsive-table） */
+    .table-wrapper {
+      overflow: auto;
+      max-inline-size: 100%;
+      container-type: inline-size;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+      --label-1: "評估項目";
+      --label-2: "基準配置（iPhone 15 Pro Max）";
+      --label-3: "最低可運行配置";
+    }
+    caption {
+      padding: 14px 16px 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-align: left;
+      color: var(--ink);
+    }
+    thead {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 1;
+    }
+    th, td {
+      padding: 11px 16px;
+      border-top: 1px solid var(--line);
+      vertical-align: top;
+    }
+    thead th {
+      border-top: 0;
+      background: #eaf2ed;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    tbody th {
+      position: sticky;
+      inset-inline-start: 0;
+      background: #fbfcf9;
+      font-weight: 700;
+    }
+
+    @container (width < 600px) {
+      table, thead, tbody, tr, th, td { display: block; }
+      thead { display: none; }
+      tbody tr {
+        margin: 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      tbody th {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 2;
+        border-top: 0;
+        background: #eaf2ed;
+      }
+      tbody td:nth-of-type(1)::before {
+        content: var(--label-2) "：";
+        font-weight: 700;
+        color: var(--green);
+      }
+      tbody td:nth-of-type(2)::before {
+        content: var(--label-3) "：";
+        font-weight: 700;
+        color: var(--muted);
+      }
+    }
+
+    footer {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      font-size: .88rem;
+    }
+    a { color: var(--blue); text-underline-offset: .2em; }
+
+    @media (max-width: 780px) {
+      main { width: calc(100% - 28px); padding-top: 26px; }
+      .diagram { padding: 14px; }
+      .evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 480px) {
+      .evidence { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sim-btn { transition: none; }
+    }
+    @media print {
+      main { width: 100%; padding: 0; }
+      .diagram, .evidence, .table-wrapper { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="label">IOS / IPADOS 原生架構藍圖 · IPHONE 15 PRO MAX 基準</p>
+    <h1>碧藍幻想繁中字幕（Apple 行動裝置方案）</h1>
+    <p class="muted">以單一原生 App（<code>WKWebView</code> 上下分區 ＋ <code>llama.cpp</code> Metal <code>0.8B Q4_K_M / 2B Q4_K_M</code> 串流推論）為主力實作；Safari 擴充功能列為後續候選方案。</p>
+  </header>
+
+  <section class="callout" aria-labelledby="core-change-title">
+    <h2 id="core-change-title">技術路線與 iPhone 15 Pro Max 基準設定</h2>
+    <p>第一版採用單一原生 App 內嵌 <strong>WKWebView</strong> 為主力架構，程式碼精簡穩定、免跨程序保活；Safari 擴充功能與原生 PiP 則保留為候選擴充介面，待後續依使用者回饋再決定是否納入。搭配 iPhone 15 Pro Max 的 8 GB RAM 與 A17 Pro 6 核心 GPU，預設採用極速 <strong>PLaMo 0.8B Q4_K_M</strong>（約 547 MB），並可一鍵切換為更高精準度的 <strong>PLaMo 2B Q4_K_M</strong>（約 1.68 GB），全面支援<strong>逐字即時串流（Streaming）</strong>與 <strong>&lt; 15 ms 硬體級翻頁中斷</strong>。</p>
+  </section>
+
+  <!-- SVG 圖 1：手機雙螢幕佈局與技術路線 -->
+  <figure class="diagram" aria-labelledby="layout-title">
+    <figcaption>
+      <h2 id="layout-title">圖一：iPhone 15 Pro Max 上下分區雙螢幕佈局與技術路線規劃</h2>
+      <p>善用 6.7 吋 19.5:9 螢幕比例，將原生字幕艙固定於遊戲畫面下方而不遮擋立繪；並明確區分第一版主力架構與未來候選方案。</p>
+    </figcaption>
+    <svg viewBox="0 0 920 460" width="100%" role="img" aria-labelledby="svg1-title svg1-desc">
+      <title id="svg1-title">iPhone 15 Pro Max 上下分區佈局與技術路線圖</title>
+      <desc id="svg1-desc">左側展示 iPhone 15 Pro Max 直向螢幕分割：上方 78% 為內嵌 WKWebView 遊戲畫面，下方 22% 為原生固定雙語字幕艙。右側展示主力 WKWebView 與候選 Safari 方案比較，以及 A17 Pro 基準硬體指標。</desc>
+      <g font-family="system-ui, 'Microsoft JhengHei', sans-serif">
+        <!-- 左側：iPhone 15 Pro Max 機身外框 -->
+        <rect x="24" y="14" width="286" height="432" rx="34" fill="#172620" stroke="#495952" stroke-width="4"/>
+        <rect x="34" y="24" width="266" height="412" rx="26" fill="#071519"/>
+        <!-- 動態島 -->
+        <rect x="128" y="34" width="78" height="18" rx="9" fill="#000000"/>
+
+        <!-- 上方 78%：WKWebView 遊戲主畫面 -->
+        <rect x="42" y="60" width="250" height="248" rx="12" fill="#163a42" stroke="#466257"/>
+        <text x="56" y="84" font-size="13" font-weight="700" fill="#6ee7d8">上方 78% · WKWebView 遊戲畫面</text>
+        <rect x="64" y="100" width="206" height="122" rx="10" fill="#0e252b" stroke="#2d525c"/>
+        <text x="167" y="145" text-anchor="middle" font-size="15" font-weight="700" fill="#f7f4eb">《碧藍幻想》劇情立繪區</text>
+        <text x="167" y="169" text-anchor="middle" font-size="12" fill="#98b4b7">完全不遮擋人物與背景</text>
+        <text x="167" y="191" text-anchor="middle" font-size="12" fill="#98b4b7">WKUserScript 唯讀擷取台詞</text>
+        <!-- 遊戲內原日文對話框示意 -->
+        <rect x="56" y="232" width="222" height="64" rx="8" fill="#071519" stroke="#98b4b7" stroke-opacity="0.45"/>
+        <text x="68" y="254" font-size="12" font-weight="700" fill="#d4b475">ルリア</text>
+        <text x="68" y="276" font-size="12" fill="#f7f4eb">さあ、みんなで行こう！</text>
+
+        <!-- 下方 22%：原生 SwiftUI 固定字幕艙 -->
+        <rect x="42" y="316" width="250" height="110" rx="12" fill="#071519" stroke="#d4b475" stroke-width="2"/>
+        <text x="54" y="336" font-size="12" font-weight="700" fill="#6ee7d8">露莉亞</text>
+        <text x="278" y="336" text-anchor="end" font-size="11" fill="#d4b475">Metal · 0.8B Q4_K_M</text>
+        <text x="54" y="364" font-size="17" font-weight="700" fill="#f7f4eb">來吧，大家一起出發！</text>
+        <line x1="54" y1="378" x2="280" y2="378" stroke="#d4b475" stroke-opacity="0.3"/>
+        <text x="54" y="396" font-size="11.5" fill="#98b4b7">さあ、みんなで行こう！</text>
+        <text x="54" y="416" font-size="11" fill="#6ee7d8">← 左滑展開 500 筆回顧與 .txt 匯出</text>
+
+        <!-- 連接線 -->
+        <line x1="318" y1="184" x2="358" y2="120" stroke="#166049" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="318" y1="370" x2="358" y2="338" stroke="#28578a" stroke-width="2" stroke-dasharray="5 4"/>
+
+        <!-- 右側上方卡片：技術路線規劃 -->
+        <rect x="360" y="22" width="536" height="196" rx="14" fill="#eff8f3" stroke="#accbbf" stroke-width="1.5"/>
+        <text x="384" y="54" font-size="19" font-weight="700" fill="#166049">技術路線規劃：主力方案 vs. 候選擴充</text>
+
+        <rect x="384" y="72" width="236" height="126" rx="10" fill="#ffffff" stroke="#166049" stroke-width="2"/>
+        <text x="400" y="98" font-size="14.5" font-weight="700" fill="#166049">主力實作：App 內建 WKWebView</text>
+        <text x="400" y="122" font-size="13" fill="#495952">• 第一版直接採用，架構最精簡穩定</text>
+        <text x="400" y="144" font-size="13" fill="#495952">• 直接走 WKScriptMessageHandler</text>
+        <text x="400" y="166" font-size="13" fill="#495952">• 實作 WKUIDelegate 與 Safari UA</text>
+        <text x="400" y="188" font-size="12" fill="#166049">免跨程序保活，遊戲重載自動重掛</text>
+
+        <rect x="636" y="72" width="236" height="126" rx="10" fill="#f8faf9" stroke="#98a8a1" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="652" y="98" font-size="14.5" font-weight="700" fill="#495952">候選方案：Safari 擴充 ＋ PiP</text>
+        <text x="652" y="122" font-size="13" fill="#495952">• 暫不實作，待使用者回饋再接入</text>
+        <text x="652" y="144" font-size="13" fill="#495952">• 保留原版 Safari 書籤與現有登入</text>
+        <text x="652" y="166" font-size="13" fill="#495952">• 需額外掛載 Extension 與 PiP 保活</text>
+        <text x="652" y="188" font-size="12" fill="#495952">iPad 未來亦可擴充 Slide Over 並排</text>
+
+        <!-- 右側下方卡片：iPhone 15 Pro Max 基準特性 -->
+        <rect x="360" y="240" width="536" height="202" rx="14" fill="#f0f5fc" stroke="#b4c8df" stroke-width="1.5"/>
+        <text x="384" y="272" font-size="19" font-weight="700" fill="#28578a">iPhone 15 Pro Max（A17 Pro · 8 GB RAM）基準變化</text>
+
+        <rect x="384" y="290" width="154" height="132" rx="10" fill="#ffffff" stroke="#b4c8df"/>
+        <text x="400" y="318" font-size="14" font-weight="700" fill="#172620">模型精度升級</text>
+        <text x="400" y="346" font-size="22" font-weight="700" fill="#166049">0.8B / 2B</text>
+        <text x="400" y="370" font-size="12.5" fill="#495952">預設 0.8B Q4_K_M</text>
+        <text x="400" y="392" font-size="12.5" fill="#495952">（~547 MB）極速；</text>
+        <text x="400" y="410" font-size="12.5" fill="#495952">可選 2B Q4_K_M（~1.68 GB）</text>
+
+        <rect x="551" y="290" width="154" height="132" rx="10" fill="#ffffff" stroke="#b4c8df"/>
+        <text x="567" y="318" font-size="14" font-weight="700" fill="#172620">串流即時吐字</text>
+        <text x="567" y="346" font-size="22" font-weight="700" fill="#166049">~100 ms</text>
+        <text x="567" y="370" font-size="12.5" fill="#495952">首字延遲 TTFT</text>
+        <text x="567" y="392" font-size="12.5" fill="#495952">60–90+ tokens/s</text>
+        <text x="567" y="410" font-size="12.5" fill="#495952">整句 0.2–0.4 秒完成</text>
+
+        <rect x="718" y="290" width="154" height="132" rx="10" fill="#ffffff" stroke="#b4c8df"/>
+        <text x="734" y="318" font-size="14" font-weight="700" fill="#172620">硬體即時中斷</text>
+        <text x="734" y="346" font-size="22" font-weight="700" fill="#166049">&lt; 15 ms</text>
+        <text x="734" y="370" font-size="12.5" fill="#495952">llama_abort_callback</text>
+        <text x="734" y="392" font-size="12.5" fill="#495952">連點翻頁即刻切斷</text>
+        <text x="734" y="410" font-size="12.5" fill="#495952">只翻畫面上最新句</text>
+      </g>
+    </svg>
+  </figure>
+
+  <!-- 互動預覽 -->
+  <section class="diagram" aria-labelledby="sim-title">
+    <h2 id="sim-title">翻譯行為差異模擬（iPhone 15 Pro Max Metal Streaming vs 傳統整句等待）</h2>
+    <div class="sim-controls" role="group" aria-label="選擇模擬情境">
+      <button id="btn-stream" class="sim-btn" type="button" aria-pressed="false">模擬 A17 Pro 逐字即時串流</button>
+      <button id="btn-abort" class="sim-btn" type="button" aria-pressed="false">模擬連點翻頁（&lt; 15 ms 中斷切換）</button>
+    </div>
+    <div class="sim-phone">
+      <div class="sim-game">
+        <span>遊戲畫面：<span id="sim-scene" lang="ja">待機中</span></span>
+        <span id="sim-badge" class="sim-pill">llama.cpp Metal · 0.8B Q4_K_M</span>
+      </div>
+      <div class="sim-deck">
+        <div id="sim-speaker" class="sim-speaker">系統提示</div>
+        <p id="sim-zh" class="sim-zh" aria-live="polite">點擊上方按鈕，查看逐字串流與快速翻頁中斷效果。</p>
+        <p id="sim-ja" class="sim-ja" lang="ja">さあ、空の旅へ出かけよう！</p>
+      </div>
+    </div>
+    <p id="sim-metrics" class="sim-metrics" role="status">就緒</p>
+  </section>
+  <script>
+    {
+      const btnStream = document.getElementById("btn-stream");
+      const btnAbort = document.getElementById("btn-abort");
+      const sceneEl = document.getElementById("sim-scene");
+      const badgeEl = document.getElementById("sim-badge");
+      const speakerEl = document.getElementById("sim-speaker");
+      const zhEl = document.getElementById("sim-zh");
+      const jaEl = document.getElementById("sim-ja");
+      const metricsEl = document.getElementById("sim-metrics");
+
+      let timers = [];
+      function clearTimers() {
+        for (const t of timers) clearTimeout(t);
+        timers = [];
+      }
+      function resetButtons(activeBtn) {
+        for (const b of [btnStream, btnAbort]) {
+          b.setAttribute("aria-pressed", String(b === activeBtn));
+        }
+      }
+
+      btnStream.addEventListener("click", () => {
+        clearTimers();
+        resetButtons(btnStream);
+        const ja = "道のりは長くても、みんなで進めば、いつかあの島にたどり着ける。";
+        const zh = "就算前面的路還很長，只要大家一起走，總有一天能抵達那座島。";
+        sceneEl.textContent = "主線劇情 第 12 章";
+        badgeEl.textContent = "Streaming · 生成中";
+        speakerEl.textContent = "卡塔莉娜";
+        jaEl.textContent = ja;
+        zhEl.textContent = "";
+        metricsEl.textContent = "首字推論中（TTFT ~100 ms）…";
+
+        const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          timers.push(setTimeout(() => {
+            zhEl.textContent = zh;
+            badgeEl.textContent = "Metal · 0.8B Q4_K_M (0.34 s)";
+            metricsEl.textContent = "已啟用減少動態效果：0.34 秒一次顯示完整譯文。";
+          }, 180));
+          return;
+        }
+
+        const chars = [...zh];
+        chars.forEach((ch, idx) => {
+          timers.push(setTimeout(() => {
+            zhEl.textContent += ch;
+            if (idx === 0) metricsEl.textContent = "TTFT 96 ms · 逐字即時串流中…";
+            if (idx === chars.length - 1) {
+              badgeEl.textContent = "Metal · 0.8B Q4_K_M (0.34 s)";
+              metricsEl.textContent = "完成！28 字耗時 0.34 秒（約 82 tokens/s），自動併入 500 筆劇本暫存。";
+            }
+          }, 96 + idx * 11));
+        });
+      });
+
+      btnAbort.addEventListener("click", () => {
+        clearTimers();
+        resetButtons(btnAbort);
+        const firstJa = "ここから先は危険な魔物がたくさんいるから気をつけて。";
+        const firstPartial = "接下來的前方有很多危險的";
+        const secondJa = "大丈夫、俺たちが一緒なら負けないさ！";
+        const secondZh = "沒問題的，只要我們在一起就不會輸！";
+
+        sceneEl.textContent = "連點翻頁（第 1 句）";
+        badgeEl.textContent = "Streaming · 生成中";
+        speakerEl.textContent = "露莉亞";
+        jaEl.textContent = firstJa;
+        zhEl.textContent = "";
+        metricsEl.textContent = "正在翻譯第 1 句…";
+
+        timers.push(setTimeout(() => {
+          zhEl.textContent = firstPartial;
+          metricsEl.textContent = "玩家提前點擊下一頁！觸發 llama_abort_callback…";
+        }, 180));
+
+        timers.push(setTimeout(() => {
+          sceneEl.textContent = "連點翻頁（第 2 句）";
+          badgeEl.textContent = "已於 12 ms 切換至最新句";
+          speakerEl.textContent = "拉卡姆";
+          jaEl.textContent = secondJa;
+          zhEl.textContent = secondZh;
+          metricsEl.textContent = "第 1 句 GPU 運算於 12 ms 內中斷並丟棄，立即輸出第 2 句完整譯文。";
+        }, 420));
+      });
+    }
+  </script>
+
+  <!-- SVG 圖 2：完整系統架構與資料流 -->
+  <figure class="diagram" aria-labelledby="flow-title">
+    <figcaption>
+      <h2 id="flow-title">圖二：iOS 原生系統架構與模組資料流</h2>
+      <p>完全重用現有的 DOM 唯讀擷取規則（<code>content.js</code>）與角色譯名表（<code>character-names.json</code>），推論層改由原生 Swift + <code>llama.cpp</code> Metal 接管。</p>
+    </figcaption>
+    <svg viewBox="0 0 920 560" width="100%" role="img" aria-labelledby="svg2-title svg2-desc">
+      <title id="svg2-title">iOS 原生版四層系統架構圖</title>
+      <desc id="svg2-desc">資料流依序經過四層：一、遊戲台詞擷取層（主力 WKWebView 與預留 Safari 擴充介面）；二、Swift 協調與詞庫層（去重、語境、500 筆暫存）；三、推論引擎層（本機 Metal 0.8B/2B Q4_K_M 與外部 API）；四、原生顯示層（主力固定字幕艙與候選原生 PiP）。</desc>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#166049"/>
+        </marker>
+      </defs>
+      <g font-family="system-ui, 'Microsoft JhengHei', sans-serif">
+        <!-- 第 1 層：遊戲擷取層 -->
+        <rect x="24" y="16" width="872" height="92" rx="12" fill="#eff8f3" stroke="#accbbf" stroke-width="1.5"/>
+        <text x="44" y="44" font-size="16" font-weight="700" fill="#166049">1. 遊戲台詞擷取層（共用現有 content.js 唯讀邏輯）</text>
+        <text x="44" y="70" font-size="13.5" fill="#172620">監聽 .prt-scene-comment 內的 .txt-character-name 與 .txt-message（含 120 ms 淡入動畫確認與去重）</text>
+        <text x="44" y="92" font-size="12.5" fill="#495952">• 主力通道：WKWebView 透過 WKUserScript → WKScriptMessageHandler 傳入 Swift　• 預留介面：Safari Web Extension</text>
+
+        <line x1="460" y1="108" x2="460" y2="138" stroke="#166049" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <!-- 第 2 層：協調與術語層 -->
+        <rect x="24" y="142" width="872" height="102" rx="12" fill="#f5f6f2" stroke="#cbd4cd" stroke-width="1.5"/>
+        <text x="44" y="170" font-size="16" font-weight="700" fill="#172620">2. Swift 會話協調與詞庫層（SubtitleSessionManager + GlossaryMatcher）</text>
+        <text x="44" y="196" font-size="13.5" fill="#172620">• 台詞序號管理：只譯畫面上最新一句，若翻頁則觸發 llama_abort_callback 立即中止舊推論</text>
+        <text x="44" y="218" font-size="13.5" fill="#172620">• PFML3 組裝：帶入 character-names.json 長詞優先匹配（最多 8 組）＋ 近期 2 句劇情語境</text>
+        <text x="44" y="236" font-size="12" fill="#495952">記憶體暫存最多 500 筆不重複雙語紀錄，支援匯出 UTF-8 BOM .txt 劇本檔</text>
+
+        <!-- 分流箭頭至第 3 層 -->
+        <line x1="300" y1="244" x2="240" y2="278" stroke="#166049" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="620" y1="244" x2="680" y2="278" stroke="#166049" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <!-- 第 3 層：左（本機 Metal）與右（外部 API） -->
+        <rect x="24" y="282" width="424" height="126" rx="12" fill="#eff8f3" stroke="#accbbf" stroke-width="1.5"/>
+        <text x="44" y="310" font-size="15.5" font-weight="700" fill="#166049">3A. 本機離線推論（llama.cpp + Apple Metal）</text>
+        <text x="44" y="336" font-size="13" fill="#172620">• 預設：0.8b-Q4_K_M（~547 MB）／高精準：2b-Q4_K_M（~1.68 GB）</text>
+        <text x="44" y="358" font-size="13" fill="#172620">• 策略：首次背景串流下載，並排除 iCloud 備份</text>
+        <text x="44" y="380" font-size="13" fill="#172620">• 加速：n_gpu_layers=99 全層 Metal ＋ 連點搶佔中斷</text>
+        <text x="44" y="398" font-size="12" fill="#495952">監聽 MemoryWarning 自動釋放 KV Cache 防止系統回收</text>
+
+        <rect x="472" y="282" width="424" height="126" rx="12" fill="#f0f5fc" stroke="#b4c8df" stroke-width="1.5"/>
+        <text x="492" y="310" font-size="15.5" font-weight="700" fill="#28578a">3B. 外部相容 API（舊機型／高階大模型備援）</text>
+        <text x="492" y="336" font-size="13" fill="#172620">• 端點：POST /v1/chat/completions 或 /v1/completions</text>
+        <text x="492" y="358" font-size="13" fill="#172620">• 適用：區網電腦 Ollama / LM Studio 或雲端 API</text>
+        <text x="492" y="380" font-size="13" fill="#172620">• 優勢：免下載本機權重，4 GB RAM 舊機亦可運行</text>
+        <text x="492" y="398" font-size="12" fill="#495952">與桌面 Chrome 版共用同一組角色譯名與語境規則</text>
+
+        <!-- 匯流箭頭至第 4 層 -->
+        <line x1="240" y1="408" x2="240" y2="442" stroke="#166049" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="680" y1="408" x2="680" y2="442" stroke="#166049" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <!-- 第 4 層：輸出介面 -->
+        <rect x="24" y="446" width="424" height="96" rx="12" fill="#fbf8ef" stroke="#9a7429" stroke-width="2"/>
+        <text x="44" y="474" font-size="15.5" font-weight="700" fill="#9a7429">4A. 主力輸出：App 內固定字幕艙（SwiftUI）</text>
+        <text x="44" y="500" font-size="13" fill="#172620">• 固定佔據螢幕下方 22%，遊戲重載不中斷不閃動</text>
+        <text x="44" y="522" font-size="13" fill="#172620">• 支援 70%–140% 字級調整與左滑 500 筆歷史抽屜</text>
+
+        <rect x="472" y="446" width="424" height="96" rx="12" fill="#f8faf9" stroke="#98a8a1" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="492" y="474" font-size="15.5" font-weight="700" fill="#495952">4B. 候選擴充：原生 PiP 懸浮窗（暫緩實作）</text>
+        <text x="492" y="500" font-size="13" fill="#495952">• 配合 Safari 路線時才啟用，繪製字幕影格兼背景保活</text>
+        <text x="492" y="522" font-size="13" fill="#495952">• 透過預留的 Session 訂閱介面接入，不影響第一版結構</text>
+      </g>
+    </svg>
+  </figure>
+
+  <section class="evidence" aria-label="iPhone 15 Pro Max 關鍵效能與規格">
+    <div><span class="number">0.8B / 2B</span>官方 Q4_K_M 雙模型<p class="muted">預設 547 MB 極速；8 GB 裝置可切換 2B 1.68 GB 高精準</p></div>
+    <div><span class="number">60–90+ tok/s</span>A17 Pro Metal 推論<p class="muted">支援逐字即時串流吐字</p></div>
+    <div><span class="number">&lt; 15 ms</span>Token Abort 切斷<p class="muted">連點翻頁即時放棄舊句運算</p></div>
+    <div><span class="number">78% / 22%</span>上下雙區排版<p class="muted">不遮擋角色立繪與操作按鈕</p></div>
+  </section>
+
+  <!-- 響應式規格對照表 -->
+  <div tabindex="0" role="region" aria-labelledby="spec-caption" class="table-wrapper">
+    <table>
+      <caption id="spec-caption">Apple 行動裝置基準規格與最低配置比較</caption>
+      <thead>
+        <tr>
+          <th scope="col">評估項目</th>
+          <th scope="col">基準配置（iPhone 15 Pro Max）</th>
+          <th scope="col">最低可運行配置</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">作業系統版本</th>
+          <td>iOS 17.0 以上（完整支援 Metal 3 與背景 PiP 穩定運作）</td>
+          <td>iOS / iPadOS 16.4 以上</td>
+        </tr>
+        <tr>
+          <th scope="row">晶片與記憶體</th>
+          <td>A17 Pro（6 核心 GPU）＋ 8 GB LPDDR5 RAM</td>
+          <td>A15 Bionic ＋ 6 GB RAM（4 GB 機型建議改用外部 API 模式）</td>
+        </tr>
+        <tr>
+          <th scope="row">模型量化精度</th>
+          <td>預設 <code>PLaMo 0.8B Q4_K_M</code>（約 547 MB），可選 <code>2B Q4_K_M</code>（約 1.68 GB）</td>
+          <td><code>PLaMo 0.8B Q4_K_M</code>（約 547 MB）或 <code>0.8B Q3_K_M</code>（約 464 MB）</td>
+        </tr>
+        <tr>
+          <th scope="row">推論輸出方式</th>
+          <td>逐字即時串流（TTFT ~100 ms，整句約 0.2–0.4 秒）</td>
+          <td>逐字串流或整句輸出（約 0.4–0.9 秒）</td>
+        </tr>
+        <tr>
+          <th scope="row">快速翻頁處理</th>
+          <td>透過 <code>llama_abort_callback</code> 於下一個 token 立即中止</td>
+          <td>透過 <code>llama_abort_callback</code> 中止或僅翻譯最新待處理台詞</td>
+        </tr>
+        <tr>
+          <th scope="row">建置與安裝方式</th>
+          <td>Windows 撰寫 Swift 程式碼 → GitHub Actions macOS Runner 自動編譯 <code>.ipa</code>（透過 SideStore / AltStore 安裝）</td>
+          <td>同左</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <a href="architecture.html">桌面 Chrome 擴充功能系統架構</a>
+    <a href="https://github.com/ggml-org/llama.cpp">llama.cpp（Apple Metal 後端）</a>
+    <a href="https://huggingface.co/pfnet/plamo-3-translate-0.8b-GGUF">PLaMo 3 Translate 0.8B GGUF</a>
+    <a href="https://developer.apple.com/documentation/avkit/avpictureinpicturecontroller">Apple AVPictureInPictureController</a>
+  </footer>
+</main>
+</body>
+</html>

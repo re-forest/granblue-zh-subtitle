@@ -1,0 +1,94 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          XCODE_16=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -n 1 || true)
+          if [ -n "$XCODE_16" ]; then
+            sudo xcode-select -s "$XCODE_16/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Run WebKit bridge and integrity tests
+        run: node ios/Tests/verify-ios-bridge.mjs
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+
+      - name: Fetch llama.cpp XCFramework
+        run: bash ios/scripts/fetch-llama-xcframework.sh
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build for iOS Simulator
+        working-directory: ios
+        run: |
+          xcodebuild build \
+            -project GBFSubtitle.xcodeproj \
+            -scheme GBFSubtitleApp \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build-sim \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Build and package unsigned IPA for device
+        working-directory: ios
+        run: |
+          xcodebuild build \
+            -project GBFSubtitle.xcodeproj \
+            -scheme GBFSubtitleApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build-device \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+
+          APP_PATH="build-device/Build/Products/Release-iphoneos/GBFSubtitleApp.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "找不到編譯產出的 GBFSubtitleApp.app" >&2
+            exit 1
+          fi
+          if [ ! -d "$APP_PATH/Frameworks/llama.framework" ]; then
+            echo "錯誤：未正確嵌入 llama.framework" >&2
+            exit 1
+          fi
+
+          rm -rf dist Payload
+          mkdir -p Payload dist
+          cp -R "$APP_PATH" Payload/
+          zip -qry "dist/GBFSubtitle-unsigned.ipa" Payload
+          rm -rf Payload
+          ls -lh dist/GBFSubtitle-unsigned.ipa
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GBFSubtitle-unsigned-ipa
+          path: ios/dist/GBFSubtitle-unsigned.ipa
+          if-no-files-found: error

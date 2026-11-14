@@ -1,0 +1,7 @@
+Vendor/
+build-sim/
+build-device/
+dist/
+*.xcodeproj/
+*.xcworkspace/
+*.ipa

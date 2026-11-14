@@ -1,7 +1,7 @@
 # 碧藍幻想繁中字幕
 
-專為《碧藍幻想》（Granblue Fantasy）設計的繁體中文即時字幕 Chrome 擴充功能（Manifest V3）。  
-以唯讀方式擷取遊戲畫面中的日文台詞，透過本機 **PLaMo 3 Translate 0.8B**（WebGPU / CPU）或自訂相容 API 即時翻譯為繁體中文，並提供置頂「懸浮字幕」與「側邊欄字幕」雙模式即時顯示。
+專為《碧藍幻想》（Granblue Fantasy）設計的繁體中文即時字幕工具，提供 **Chrome 擴充功能（Manifest V3）** 與 **iOS / iPadOS 原生 App（`WKWebView` ＋ Apple Metal）** 雙平台方案。  
+以唯讀方式擷取遊戲畫面中的日文台詞，透過本機 **PLaMo 3 Translate** 或外部相容 LLM API 即時翻譯為繁體中文，支援置頂「懸浮字幕」、瀏覽器「側邊欄字幕」以及行動裝置上下分區雙螢幕顯示。
 
 ---
 
@@ -44,10 +44,22 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1 -IncludeMod
 
 ---
 
+## iOS / iPadOS 原生版（iPhone 15 Pro Max 基準）
+
+針對行動裝置玩家提供單一原生 SwiftUI 應用程式（內嵌獨立 `WKWebView` 與 `llama.cpp` Apple Metal GPU 推論），詳細使用與雲端打包步驟請參閱 [ios/README.md](ios/README.md) 與系統架構藍圖 [docs/ios-architecture.html](docs/ios-architecture.html)：
+
+- **上下分區雙螢幕**：上方 78% 顯示遊戲畫面，下方 22% 固定顯示繁中譯文與日文原文，不遮擋立繪與按鈕；支援 Mobage、DMM 與 Google OAuth 登入視窗。
+- **Metal 串流推論與離線模型**：預設提供 `PLaMo 0.8B Q4_K_M`（約 547 MB）與高精度 `PLaMo 2B Q4_K_M`（約 1.68 GB），亦支援連接區網 Ollama / LM Studio / `llama-server`。
+- **雲端自動編譯打包 `.ipa`**：無需 Mac，於 GitHub 分頁開啟 **Actions → Build iOS App → Run workflow** 即可在 `macos-15` 環境編譯並下載 `GBFSubtitle-unsigned.ipa`，再使用 Sideloadly 或 SideStore 安裝至實機。
+
+---
+
 ## 專案結構
 
 ```text
 .
+├── .github/workflows/
+│   └── ios-build.yml           # macOS Runner 自動編譯與打包 unsigned .ipa 流程
 ├── extension/                  # Chrome 擴充功能本體
 │   ├── manifest.json           # Manifest V3 設定與權限宣告
 │   ├── background.js           # Service Worker 與狀態協調
@@ -62,8 +74,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1 -IncludeMod
 │   ├── icons/                  # 擴充功能圖示（16 / 48 / 128 px）
 │   ├── vendor/wllama/          # 內建 WebAssembly / WebGPU 推論執行環境
 │   └── licenses/               # 第三方元件授權全文
+├── ios/                        # iOS / iPadOS 原生 SwiftUI + WKWebView 專案
+│   ├── project.yml             # XcodeGen 專案定義檔
+│   ├── scripts/                # llama.cpp XCFramework 自動下載與校驗腳本
+│   ├── GBFSubtitleApp/         # Swift 原生原始碼、Info.plist 與 WebKit 擷取資源
+│   ├── Tests/                  # Node.js WebKit 橋接與詞庫自動化驗證腳本
+│   └── README.md               # Windows 打包與 Sideloadly / SideStore 安裝指引
 ├── docs/
-│   └── architecture.html       # 系統架構說明
+│   ├── architecture.html       # 桌面 Chrome 擴充功能系統架構說明
+│   └── ios-architecture.html   # iOS / iPadOS 原生版本系統架構說明
 ├── scripts/
 │   ├── setup-runtime.ps1       # 選用：預先離線配置模型腳本
 │   └── build-release.ps1       # 商店上架包與離線包驗證打包腳本
